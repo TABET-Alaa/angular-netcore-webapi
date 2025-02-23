@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using WebApplication1.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 
 namespace WebApplication1.Controllers
@@ -17,6 +20,8 @@ namespace WebApplication1.Controllers
             _configuration = configuration;
         }
 
+
+        [HttpGet]
         public JsonResult Get()
         {
             string query = @"
@@ -25,18 +30,64 @@ namespace WebApplication1.Controllers
             ";
             DataTable table = new DataTable();
             string sqlDataSource = _configuration.GetConnectionString("EmployeeAppCon");
+
+            // read data from the SQL query.
             SqlDataReader myReader;
-            using(SqlConnection myCon=new SqlConnection(sqlDataSource))
+
+            //using ensures that the connection is properly disposed of after use.
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
             {
                 myCon.Open();
-                using(SqlCommand myCommand = new SqlCommand(query, myCon))
+                //Creates an instance of SqlCommand
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
                 {
+                    //Executes the query using ExecuteReader(),
+                    //which returns a SqlDataReader containing the results.
                     myReader = myCommand.ExecuteReader();
                     table.Load(myReader);
                     myReader.Close();
                     myCon.Close();
                 }
             }
+
+            return new JsonResult(table);
         }
+
+
+        [HttpPost]
+        public JsonResult Post(Department dep)
+        {
+            string query = @"
+                        insert into dbo.Department 
+                        values (@DepartmentName)
+                         ";
+
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("EmployeeAppCon");
+            SqlDataReader myReader;
+
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    // Creates a SQL parameter named @DepartmentName.
+                    // Assigns dep.DepartmentName as its value.
+                    // Ensures the value is treated as raw data, not SQL code.
+                    //Sends the query separately from the value, preventing SQL injection.
+                    myCommand.Parameters.AddWithValue("@DepartmentName", dep.DepartmentName);
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+                return new JsonResult(table);
+            }
+        }
+
+
+
+
+
     }
 }
