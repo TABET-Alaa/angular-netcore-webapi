@@ -81,13 +81,14 @@ namespace WebApplication1.Controllers
                     myReader.Close();
                     myCon.Close();
                 }
-                return new JsonResult(table);
+                return new JsonResult("Added successfully");
             }
         }
 
 
         [HttpPut]
-        public JsonResult Put(Department dep) {
+        public JsonResult Put(Department dep)
+        {
             string query = @"
                     update dbo.Department
                     set DepartmentName = @DepartmentName
@@ -111,10 +112,36 @@ namespace WebApplication1.Controllers
                     myReader.Close();
                     myCon.Close();
                 };
-                return new JsonResult(table);
+                return new JsonResult("Update successfully");
             }
         }
 
+        [HttpDelete("{id}")]
+        public JsonResult Delete(int id)
+        {
+            string query = @"
+                            delete from dbo.Department
+                            where DepartmentId=@DepartemntId
+                            ";
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("EmployeeAppCon");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@DepartmentId", id);
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+            return new JsonResult("Deleted");
 
+
+
+        }
     }
 }
