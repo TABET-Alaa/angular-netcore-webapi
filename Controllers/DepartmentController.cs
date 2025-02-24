@@ -86,7 +86,34 @@ namespace WebApplication1.Controllers
         }
 
 
+        [HttpPut]
+        public JsonResult Put(Department dep) {
+            string query = @"
+                    update dbo.Department
+                    set DepartmentName = @DepartmentName
+                    where DepartmentId=@DepartmentId
+                    ";
 
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("EmployeeAppCon");
+            SqlDataReader myReader;
+
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@DepartmentName ", dep.DepartmentName);
+                    myCommand.Parameters.AddWithValue("@DepartmentId", dep.DepartmentId);
+
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                };
+                return new JsonResult(table);
+            }
+        }
 
 
     }
