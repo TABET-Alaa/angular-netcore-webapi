@@ -1,3 +1,5 @@
+using Microsoft.Extensions.FileProviders;
+
 var builder = WebApplication.CreateBuilder(args);
 
 //Json Serialiser
@@ -36,8 +38,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("CorsPolicy");
 
+app.UseStaticFiles();    //Serve files from wwwroot
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+            Path.Combine(Directory.GetCurrentDirectory(), "Photos")),
+    RequestPath = "/Photos"
+});
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+
 
 app.Run();
